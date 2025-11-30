@@ -1,0 +1,5 @@
+{
+  "name": "C.R. Performing Arts Academy Manager",
+  "description": "A comprehensive student management system for C.R. Performing Arts Academy, featuring a dashboard, class scheduling, and an AI-powered photo studio for editing student headshots using Gemini 2.5.",
+  "requestFramePermissions": []
+}
