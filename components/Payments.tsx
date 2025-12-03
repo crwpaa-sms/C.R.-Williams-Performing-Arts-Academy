@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { Payment, UserRole } from '../types';
 import { CreditCard, Search, Plus, CheckCircle, AlertCircle, Clock, Edit2, Trash2, Save, X, ArrowUpDown, FileText, Printer, Mail } from 'lucide-react';
+import { usePayments } from '../hooks/usePayments';
 
 interface PaymentsProps {
   role: UserRole;
-  payments: Payment[];
-  setPayments: React.Dispatch<React.SetStateAction<Payment[]>>;
 }
 
 type SortField = 'date' | 'amount' | 'status' | 'studentName';
 
-const Payments: React.FC<PaymentsProps> = ({ role, payments, setPayments }) => {
+const Payments: React.FC<PaymentsProps> = ({ role }) => {
+  const { payments, addPayment, updatePayment, deletePayment } = usePayments();
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Payment>>({});
@@ -80,18 +80,18 @@ const Payments: React.FC<PaymentsProps> = ({ role, payments, setPayments }) => {
         status: editForm.status || 'Pending',
         method: editForm.method || 'Cash'
       } as Payment;
-      setPayments([...payments, newPayment]);
+      addPayment(newPayment);
       setIsAdding(false);
-    } else {
-      setPayments(prev => prev.map(p => p.id === editingId ? { ...p, ...editForm } as Payment : p));
+    } else if (editingId) {
+      updatePayment({ ...editForm, id: editingId } as Payment);
     }
     setEditingId(null);
     setEditForm({});
   };
 
-  const deletePayment = (id: string) => {
+  const deletePaymentHandler = (id: string) => {
     if (window.confirm("Delete this payment record?")) {
-      setPayments(prev => prev.filter(p => p.id !== id));
+      deletePayment(id);
     }
   };
 
@@ -375,7 +375,7 @@ const Payments: React.FC<PaymentsProps> = ({ role, payments, setPayments }) => {
                                   <FileText size={18}/>
                                 </button>
                                 <button onClick={() => { setEditingId(payment.id); setEditForm(payment); }} className="text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 p-1 rounded"><Edit2 size={18}/></button>
-                                <button onClick={() => deletePayment(payment.id)} className="text-slate-400 hover:text-red-600 hover:bg-red-50 p-1 rounded"><Trash2 size={18}/></button>
+                                <button onClick={() => deletePaymentHandler(payment.id)} className="text-slate-400 hover:text-red-600 hover:bg-red-50 p-1 rounded"><Trash2 size={18}/></button>
                               </>
                            )}
                          </div>

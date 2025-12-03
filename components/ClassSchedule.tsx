@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Course, UserRole, Student, Teacher } from '../types';
 import { Clock, Users, MapPin, Edit2, Save, X, Plus, Trash2, UserPlus, Check, UserMinus } from 'lucide-react';
+import { useCourses } from '../hooks/useCourses';
 
 interface CourseCardProps {
   course: Course;
@@ -218,23 +219,23 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, canEdit, onUpdate, onDe
 
 interface ClassScheduleProps {
   role: UserRole;
-  courses: Course[];
-  setCourses: React.Dispatch<React.SetStateAction<Course[]>>;
   students: Student[];
   teachers: Teacher[];
 }
 
-const ClassSchedule: React.FC<ClassScheduleProps> = ({ role, courses, setCourses, students, teachers }) => {
+const ClassSchedule: React.FC<ClassScheduleProps> = ({ role, students, teachers }) => {
+  const { courses, addCourse, updateCourse, deleteCourse } = useCourses();
+  
   // Admins can edit courses
   const canEdit = role === 'ADMIN';
 
   const handleUpdateCourse = (updated: Course) => {
-    setCourses(prev => prev.map(c => c.id === updated.id ? updated : c));
+    updateCourse(updated);
   };
 
   const handleDeleteCourse = (id: string) => {
     if (window.confirm("Are you sure you want to delete this course?")) {
-      setCourses(prev => prev.filter(c => c.id !== id));
+      deleteCourse(id);
     }
   };
 
@@ -250,7 +251,7 @@ const ClassSchedule: React.FC<ClassScheduleProps> = ({ role, courses, setCourses
        studentIds: [],
        capacity: 15
      };
-     setCourses([...courses, newCourse]);
+     addCourse(newCourse);
   };
 
   const getTitle = () => {

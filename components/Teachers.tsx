@@ -1,13 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { Teacher } from '../types';
 import { Search, Plus, Edit2, Trash2, Save, X, Mail, AlertTriangle, User, Camera } from 'lucide-react';
+import { useTeachers } from '../hooks/useTeachers';
 
-interface TeachersProps {
-  teachers: Teacher[];
-  setTeachers: React.Dispatch<React.SetStateAction<Teacher[]>>;
-}
+interface TeachersProps {}
 
-const Teachers: React.FC<TeachersProps> = ({ teachers, setTeachers }) => {
+const Teachers: React.FC<TeachersProps> = () => {
+  const { teachers, addTeacher, updateTeacher, deleteTeacher } = useTeachers();
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Teacher>>({});
@@ -47,10 +46,10 @@ const Teachers: React.FC<TeachersProps> = ({ teachers, setTeachers }) => {
         status: editForm.status || 'Active',
         photoUrl: editForm.photoUrl
       } as Teacher;
-      setTeachers([...teachers, newTeacher]);
+      addTeacher(newTeacher);
       setIsAdding(false);
-    } else {
-      setTeachers(prev => prev.map(t => t.id === editingId ? { ...t, ...editForm } as Teacher : t));
+    } else if (editingId) {
+      updateTeacher({ ...editForm, id: editingId } as Teacher);
     }
     setEditingId(null);
     setEditForm({});
@@ -62,7 +61,7 @@ const Teachers: React.FC<TeachersProps> = ({ teachers, setTeachers }) => {
 
   const confirmDelete = () => {
     if (deleteId) {
-      setTeachers(prev => prev.filter(t => t.id !== deleteId));
+      deleteTeacher(deleteId);
       setDeleteId(null);
     }
   };
