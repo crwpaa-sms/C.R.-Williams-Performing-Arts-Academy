@@ -40,16 +40,25 @@ This is a comprehensive Learning Management System with a dashboard and multiple
 
 ## Getting Started
 
+### Option 1: Using Python Server (Recommended for this environment)
+1. Run the Python server:
+   ```bash
+   python3 server.py
+   ```
+2. Open your browser and navigate to `http://localhost:8000`
+
+### Option 2: Direct Browser Access
+1. Open the file `/workspace/dist/index.html` directly in your browser
+
+### Option 3: Development Environment (if dependencies can be installed)
 1. Install dependencies:
-```bash
-npm install
-```
-
+   ```bash
+   npm install
+   ```
 2. Start the development server:
-```bash
-npm run dev
-```
-
+   ```bash
+   npm run dev
+   ```
 3. Access the application at `http://localhost:5173`
 
 ## Demo Credentials
