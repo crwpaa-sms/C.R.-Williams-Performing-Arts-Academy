@@ -18,7 +18,7 @@ import {
   Megaphone,
   Sparkles
 } from 'lucide-react';
-import { NavItem, TabView, UserRole, Student, Teacher, Course, GradeEntry, Announcement, Payment, Show } from './types';
+import { NavItem, TabView, UserRole } from './types';
 import Dashboard from './components/Dashboard';
 import Students from './components/Students';
 import Teachers from './components/Teachers';
@@ -31,99 +31,31 @@ import Gradebook from './components/Gradebook';
 import Profile from './components/Profile';
 import Announcements from './components/Announcements';
 import UpcomingShows from './components/UpcomingShows';
-import { INITIAL_STUDENTS, INITIAL_COURSES, INITIAL_TEACHERS, INITIAL_PAYMENTS, INITIAL_SHOWS } from './data/mockData';
+import { AppProvider, useAppContext } from './context/AppContext';
 
-const App: React.FC = () => {
-  // Global Data State
-  const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
-  const [teachers, setTeachers] = useState<Teacher[]>(INITIAL_TEACHERS);
-  const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
-  const [payments, setPayments] = useState<Payment[]>(INITIAL_PAYMENTS);
-  const [shows, setShows] = useState<Show[]>(INITIAL_SHOWS);
-  const [grades, setGrades] = useState<GradeEntry[]>([]);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([
-    { 
-      id: '1', 
-      title: 'Spring Recital Auditions', 
-      content: 'Auditions for the main roles will be held next Friday in Studio A. Please prepare a 2-minute monologue.', 
-      date: '2024-03-10', 
-      audience: 'ALL',
-      author: 'Admin'
-    },
-    { 
-      id: '2', 
-      title: 'Facility Maintenance', 
-      content: 'Studio B will be closed for floor maintenance on Wednesday afternoon.', 
-      date: '2024-03-12', 
-      audience: 'ALL',
-      author: 'Admin'
-    }
-  ]);
-
-  // Auth State
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUserRole, setCurrentUserRole] = useState<UserRole>('ADMIN');
-  const [currentUser, setCurrentUser] = useState<any>(null); // Full user object
-  const [loginForm, setLoginForm] = useState({ role: '', user: '', pass: '' });
+const AppContent: React.FC = () => {
+  const { 
+    students, 
+    teachers, 
+    courses, 
+    payments, 
+    shows, 
+    grades, 
+    announcements,
+    isAuthenticated,
+    currentUserRole,
+    currentUser,
+    loginForm,
+    handleLogin,
+    handleLogout,
+    handleProfileUpdate,
+    updateStudent,
+    dispatch
+  } = useAppContext();
 
   // UI State
   const [activeTab, setActiveTab] = useState<TabView>(TabView.DASHBOARD);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // --- LOGIN LOGIC ---
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    const { role, user, pass } = loginForm;
-
-    if (role === 'ADMIN' && user === 'admin' && pass === 'password') {
-       setCurrentUserRole('ADMIN');
-       setCurrentUser({ name: 'Administrator' });
-       setIsAuthenticated(true);
-       setActiveTab(TabView.DASHBOARD);
-    } else if (role === 'TEACHER') {
-       // Mock Teacher Login (using email)
-       const teacher = teachers.find(t => t.email.toLowerCase() === user.toLowerCase());
-       if (teacher && pass === 'password') {
-          setCurrentUserRole('TEACHER');
-          setCurrentUser(teacher);
-          setIsAuthenticated(true);
-          setActiveTab(TabView.DASHBOARD);
-       } else {
-          alert('Invalid Teacher Credentials. Use email from directory and password "password".');
-       }
-    } else if (role === 'STUDENT') {
-       const student = students.find(s => s.email.toLowerCase() === user.toLowerCase());
-       if (student && pass === student.password) {
-          setCurrentUserRole('STUDENT');
-          setCurrentUser(student);
-          setIsAuthenticated(true);
-          setActiveTab(TabView.DASHBOARD);
-       } else {
-          alert('Invalid Student Credentials. Use email from directory and password "password".');
-       }
-    } else {
-       alert('Please select a valid role and enter credentials.');
-    }
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setCurrentUser(null);
-    setLoginForm({ role: '', user: '', pass: '' });
-  };
-
-  const handleProfileUpdate = (updatedUser: any) => {
-     setCurrentUser(updatedUser);
-     if (currentUserRole === 'STUDENT') {
-        setStudents(prev => prev.map(s => s.id === updatedUser.id ? updatedUser : s));
-     } else if (currentUserRole === 'TEACHER') {
-        setTeachers(prev => prev.map(t => t.id === updatedUser.id ? updatedUser : t));
-     }
-  };
-
-  const updateStudent = (updated: Student) => {
-    setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
-  };
 
   // --- NAVIGATION ---
   const getNavItems = (role: UserRole): NavItem[] => {
@@ -176,25 +108,71 @@ const App: React.FC = () => {
       case TabView.DASHBOARD:
         return <Dashboard role={currentUserRole} announcements={announcements} payments={payments} shows={shows} />;
       case TabView.ANNOUNCEMENTS:
-        return <Announcements role={currentUserRole} announcements={announcements} setAnnouncements={setAnnouncements} />;
+        return <Announcements 
+          role={currentUserRole} 
+          announcements={announcements} 
+          setAnnouncements={(newAnnouncements) => dispatch({ type: 'UPDATE_ANNOUNCEMENTS', announcements: newAnnouncements })} 
+        />;
       case TabView.UPCOMING_SHOWS:
-        return <UpcomingShows role={currentUserRole} shows={shows} setShows={setShows} />;
+        return <UpcomingShows 
+          role={currentUserRole} 
+          shows={shows} 
+          setShows={(newShows) => dispatch({ type: 'UPDATE_SHOWS', shows: newShows })} 
+        />;
       case TabView.STUDENTS:
-        return <Students role={currentUserRole} students={students} setStudents={setStudents} courses={courses} grades={grades} />;
+        return <Students 
+          role={currentUserRole} 
+          students={students} 
+          setStudents={(newStudents) => dispatch({ type: 'UPDATE_STUDENTS', students: newStudents })} 
+          courses={courses} 
+          grades={grades} 
+        />;
       case TabView.TEACHERS:
-        return <Teachers teachers={teachers} setTeachers={setTeachers} />;
+        return <Teachers 
+          teachers={teachers} 
+          setTeachers={(newTeachers) => dispatch({ type: 'UPDATE_TEACHERS', teachers: newTeachers })} 
+        />;
       case TabView.COURSES:
-        return <ClassSchedule role={currentUserRole} courses={courses} setCourses={setCourses} students={students} teachers={teachers} />;
+        return <ClassSchedule 
+          role={currentUserRole} 
+          courses={courses} 
+          setCourses={(newCourses) => dispatch({ type: 'UPDATE_COURSES', courses: newCourses })} 
+          students={students} 
+          teachers={teachers} 
+        />;
       case TabView.PHOTO_STUDIO:
         return <PhotoStudio />;
       case TabView.SYLLABUS:
-        return <SyllabusCreator courses={courses} setCourses={setCourses} role={currentUserRole} currentUserId={currentUser?.id} />;
+        return <SyllabusCreator 
+          courses={courses} 
+          setCourses={(newCourses) => dispatch({ type: 'UPDATE_COURSES', courses: newCourses })} 
+          role={currentUserRole} 
+          currentUserId={currentUser?.id} 
+        />;
       case TabView.ACADEMICS:
-        return <StudentAcademics studentId={currentUserRole === 'STUDENT' ? currentUser.id : undefined} students={students} courses={courses} grades={grades} role={currentUserRole} onUpdateStudent={updateStudent} />;
+        return <StudentAcademics 
+          studentId={currentUserRole === 'STUDENT' ? currentUser.id : undefined} 
+          students={students} 
+          courses={courses} 
+          grades={grades} 
+          role={currentUserRole} 
+          onUpdateStudent={updateStudent} 
+        />;
       case TabView.GRADES:
-        return <Gradebook role={currentUserRole} currentUserId={currentUser?.id} courses={courses} students={students} grades={grades} setGrades={setGrades} />;
+        return <Gradebook 
+          role={currentUserRole} 
+          currentUserId={currentUser?.id} 
+          courses={courses} 
+          students={students} 
+          grades={grades} 
+          setGrades={(newGrades) => dispatch({ type: 'UPDATE_GRADES', grades: newGrades })} 
+        />;
       case TabView.PAYMENTS:
-        return <Payments role={currentUserRole} payments={payments} setPayments={setPayments} />;
+        return <Payments 
+          role={currentUserRole} 
+          payments={payments} 
+          setPayments={(newPayments) => dispatch({ type: 'UPDATE_PAYMENTS', payments: newPayments })} 
+        />;
       case TabView.PROFILE:
         return <Profile user={currentUser} role={currentUserRole} onUpdateProfile={handleProfileUpdate} />;
       default:
@@ -215,13 +193,18 @@ const App: React.FC = () => {
               <p className="text-slate-500 text-sm">Performing Arts Academy</p>
            </div>
            
-           <form onSubmit={handleLogin} className="space-y-4">
+           <form onSubmit={(e) => {
+             e.preventDefault();
+             const loginFormWithRole = { role: loginForm.role, user: loginForm.user, pass: loginForm.pass };
+             dispatch({ type: 'SET_LOGIN_FORM', loginForm: loginFormWithRole });
+             handleLogin(e);
+           }} className="space-y-4">
               <div>
                  <label className="block text-sm font-semibold text-slate-700 mb-1">Select Role</label>
                  <select 
                    className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#8e44ad] outline-none"
                    value={loginForm.role}
-                   onChange={e => setLoginForm({...loginForm, role: e.target.value})}
+                   onChange={e => dispatch({ type: 'SET_LOGIN_FORM', loginForm: { ...loginForm, role: e.target.value } })}
                    required
                  >
                     <option value="" disabled>Choose your role...</option>
@@ -238,7 +221,7 @@ const App: React.FC = () => {
                   className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#8e44ad] outline-none"
                   placeholder={loginForm.role === 'ADMIN' ? 'admin' : 'email@example.com'}
                   value={loginForm.user}
-                  onChange={e => setLoginForm({...loginForm, user: e.target.value})}
+                  onChange={e => dispatch({ type: 'SET_LOGIN_FORM', loginForm: { ...loginForm, user: e.target.value } })}
                   required
                 />
               </div>
@@ -250,7 +233,7 @@ const App: React.FC = () => {
                   className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#8e44ad] outline-none"
                   placeholder="••••••••"
                   value={loginForm.pass}
-                  onChange={e => setLoginForm({...loginForm, pass: e.target.value})}
+                  onChange={e => dispatch({ type: 'SET_LOGIN_FORM', loginForm: { ...loginForm, pass: e.target.value } })}
                   required
                 />
               </div>
@@ -389,6 +372,15 @@ const App: React.FC = () => {
         />
       )}
     </div>
+  );
+};
+
+// Main App component that provides the context
+const App: React.FC = () => {
+  return (
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
   );
 };
 

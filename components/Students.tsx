@@ -1,16 +1,16 @@
 import React, { useState, useRef } from 'react';
 import { Student, UserRole, Course, GradeEntry } from '../types';
 import { Search, Filter, UserPlus, Save, X, Edit2, Trash2, MoreHorizontal, AlertTriangle, User, BookOpen, Clock, CheckCircle, GraduationCap, Camera } from 'lucide-react';
+import { useStudents } from '../hooks/useStudents';
 
 interface StudentsProps {
   role: UserRole;
-  students: Student[];
-  setStudents: React.Dispatch<React.SetStateAction<Student[]>>;
   courses: Course[];
   grades: GradeEntry[];
 }
 
-const Students: React.FC<StudentsProps> = ({ role, students, setStudents, courses, grades }) => {
+const Students: React.FC<StudentsProps> = ({ role, courses, grades }) => {
+  const { students, addStudent, updateStudent, deleteStudent } = useStudents();
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Student>>({});
@@ -54,10 +54,10 @@ const Students: React.FC<StudentsProps> = ({ role, students, setStudents, course
         photoUrl: editForm.photoUrl,
         ...editForm
       } as Student;
-      setStudents([...students, newStudent]);
+      addStudent(newStudent);
       setIsAdding(false);
-    } else {
-      setStudents(prev => prev.map(s => s.id === editingId ? { ...s, ...editForm } as Student : s));
+    } else if (editingId) {
+      updateStudent({ ...editForm, id: editingId } as Student);
       setEditingId(null);
     }
     setEditForm({});
@@ -69,7 +69,7 @@ const Students: React.FC<StudentsProps> = ({ role, students, setStudents, course
 
   const confirmDelete = () => {
     if (deleteId) {
-      setStudents(prev => prev.filter(s => s.id !== deleteId));
+      deleteStudent(deleteId);
       setDeleteId(null);
     }
   };
